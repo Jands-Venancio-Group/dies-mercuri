@@ -1,0 +1,16 @@
+## Dies Mercuri — contexto do projeto
+
+### 2025-03-22
+- Repositório Git inicializado na pasta do tema (`git init`).
+- Criado `README.md` com o título `# dies-mercuri`.
+- Primeiro commit: `first commit` (apenas README).
+- Branch padrão renomeada para `main`.
+- Remote `origin`: https://github.com/JandsVenancio/dies-mercuri.git
+- Push inicial concluído: `main` publicada e com tracking `origin/main`.
+
+**Nota:** O commit inicial contém só o README. O restante dos arquivos do tema Shopify ainda não está versionado; para incluir tudo, usar `git add .` e um novo commit quando desejar.
+
+### Selos na mídia da página de produto (2025-03-22)
+- **Problema:** Na PDP, a galeria (`blocks/_product-media-gallery.liquid`) não renderizava `product-card-badges`; os selos de esgotado/oferta só apareciam nos cards.
+- **Solução:** Inclusão de um wrapper `product-media-gallery__badges` dentro de `<media-gallery>` com o mesmo snippet dos cards; `media-gallery` com `position: relative` em `assets/base.css`; estilos de overlay em `_product-media-gallery.liquid` (`inset: 0`, `pointer-events: none`, `z-index: 2`).
+- **Snippet:** `snippets/product-card-badges.liquid` aceita parâmetro opcional `variant`; na PDP passa-se `selected_product.selected_or_first_available_variant` para alinhar esgotado/oferta à variante. O `media-gallery.js` já substitui o elemento inteiro no `variantUpdate`, mantendo os selos atualizados ao trocar variante.

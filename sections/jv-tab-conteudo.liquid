@@ -1,0 +1,234 @@
+{% comment %}
+  Seção: JV Tabs Conteúdo
+  Descrição: Sessão de abas com imagem e texto, responsiva, com animações de slide e configurações avançadas
+{% endcomment %}
+
+<style>
+  /* Área da seção e paddings */
+  #jv-tabs-{{ section.id }} {
+    background-color: {{ section.settings.background_color }};
+    padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px 0;
+  }
+  @media (min-width: 769px) {
+    #jv-tabs-{{ section.id }} {
+      padding: {{ section.settings.padding_top_desktop }}px 0 {{ section.settings.padding_bottom_desktop }}px 0;
+    }
+  }
+
+  /* Largura máxima (tabs e conteúdo juntos) */
+  #jv-tabs-{{ section.id }} .jv-tabs-container {
+    width: {{ section.settings.width_mobile_pct }}%;      /* largura responsiva */
+    max-width: {{ section.settings.width_desktop_px }}px; /* não ultrapassar este valor */
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* Menu de abas */
+  #jv-tabs-{{ section.id }} .jv-tabs-menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: {{ section.settings.tab_button_gap_mobile }}px; /* mobile */
+    margin-bottom: {{ section.settings.tabs_content_spacing }}px;
+  }
+  @media (min-width: 769px) {
+    #jv-tabs-{{ section.id }} .jv-tabs-menu {
+      gap: {{ section.settings.tab_button_gap }}px; /* desktop */
+    }
+  }
+button.jv-tab-button {
+    font-family: 'geist', sans-serif;
+}
+
+  /* Botões de aba */
+  #jv-tabs-{{ section.id }} .jv-tab-button {
+    flex: 1 1 calc(33.333% - {{ section.settings.tab_button_gap_mobile }}px);
+    max-width: 200px;
+    border:none;
+    background: transparent;
+    /*border: 1px solid {{ section.settings.tab_border_color }};
+    border-radius: {{ section.settings.tab_border_radius }}px;*/
+    background-color: {{ section.settings.tab_inactive_bg_color }};
+    color: {{ section.settings.tab_inactive_text_color }};
+    font-size: {{ section.settings.tab_text_size_mobile }}px;
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none; /* remove underline */
+    padding: 8px 2px; /* mobile específico */
+  }
+  @media (min-width: 769px) {
+    #jv-tabs-{{ section.id }} .jv-tab-button {
+      flex: 0 1 auto;
+      font-size: {{ section.settings.tab_text_size_desktop }}px;
+      margin: 8px 16px;
+    }
+  }
+  #jv-tabs-{{ section.id }} .jv-tab-button.active {
+    border-bottom: 2px solid {{ section.settings.tab_active_bg_color }};
+    color: {{ section.settings.tab_active_text_color }};
+  }
+
+  /* Conteúdo das abas: animação de slide vertical via max-height */
+  #jv-tabs-{{ section.id }} .jv-tab-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: {{ section.settings.content_gap }}px;
+    align-items: {{ section.settings.content_vertical_alignment }};
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  #jv-tabs-{{ section.id }} .jv-tab-content.active {
+    max-height: 2000px; /* suficiente para acomodar o conteúdo */
+  }
+
+  /* Imagem e texto */
+  #jv-tabs-{{ section.id }} .jv-tab-image {
+    flex: 0 0 {{ section.settings.image_width_pct }}%;
+  }
+  #jv-tabs-{{ section.id }} .jv-tab-image img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+  #jv-tabs-{{ section.id }} .jv-tab-text {
+    flex: 1 1 calc(100% - {{ section.settings.image_width_pct }}% - {{ section.settings.content_gap }}px);
+    color: {{ section.settings.text_color }};
+    font-size: {{ section.settings.content_text_size_mobile }}px;
+  }
+  @media (min-width: 769px) {
+    #jv-tabs-{{ section.id }} .jv-tab-text {
+      font-size: {{ section.settings.content_text_size_desktop }}px;
+    }
+  }
+
+  /* Responsivo: empilha no mobile */
+  @media (max-width: 768px) {
+    #jv-tabs-{{ section.id }} .jv-tab-content {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<div id="jv-tabs-{{ section.id }}">
+  <div class="jv-tabs-container">
+    <div class="jv-tabs-menu">
+      {% for block in section.blocks %}
+       <button
+         type="button"
+         class="jv-tab-button{% if forloop.first %} active{% endif %}"
+         data-tab="tab-{{ block.id }}">
+         {{ block.settings.tab_label }}
+       </button>
+      {% endfor %}
+    </div>
+
+    <div class="jv-tabs-contents">
+      {% for block in section.blocks %}
+        <div
+          id="tab-{{ block.id }}"
+          class="jv-tab-content{% if forloop.first %} active{% endif %}">
+          <div class="jv-tab-image">
+            {% if block.settings.image %}
+              <img
+                src="{{ block.settings.image | img_url: 'master' }}"
+                alt="{{ block.settings.tab_label }}">
+            {% endif %}
+          </div>
+          <div class="jv-tab-text">
+            {{ block.settings.title }}
+            {{ block.settings.body }}
+            {% if block.settings.link_url %}
+              <p>
+                <a
+                  href="{{ block.settings.link_url }}"
+                  target="{{ block.settings.link_target }}">
+                  {{ block.settings.link_text }}
+                </a>
+              </p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const section = document.getElementById('jv-tabs-{{ section.id }}');
+    if (!section) return;
+    const buttons = section.querySelectorAll('.jv-tab-button');
+    const contents = section.querySelectorAll('.jv-tab-content');
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        button.classList.add('active');
+        const target = button.getAttribute('data-tab');
+        const pane = section.querySelector('#' + target);
+        if (pane) pane.classList.add('active');
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "JV Tabs Conteúdo",
+  "max_blocks": 10,
+  "presets": [
+    { "name": "JV Tabs Conteúdo" }
+  ],
+  "settings": [
+    { "type":"range","id":"padding_top_mobile","label":"Padding superior mobile","min":0,"max":300,"step":5,"unit":"px","default":10},
+    { "type":"range","id":"padding_top_desktop","label":"Padding superior desktop","min":0,"max":300,"step":5,"unit":"px","default":10},
+    { "type":"range","id":"padding_bottom_mobile","label":"Padding inferior mobile","min":0,"max":300,"step":5,"unit":"px","default":10},
+    { "type":"range","id":"padding_bottom_desktop","label":"Padding inferior desktop","min":0,"max":300,"step":5,"unit":"px","default":10},
+
+    { "type":"range","id":"width_desktop_px","label":"Largura desktop","min":300,"max":1950,"step":50,"unit":"px","default":1200},
+    { "type":"range","id":"width_mobile_pct","label":"Largura mobile (%)","min":90,"max":100,"step":1,"unit":"%","default":95},
+
+    { "type":"range","id":"tab_button_gap_mobile","label":"Espaçamento entre abas (mobile)","min":0,"max":50,"step":1,"unit":"px","default":10},
+    { "type":"range","id":"tab_button_gap","label":"Espaçamento entre abas (desktop)","min":0,"max":50,"step":1,"unit":"px","default":10},
+    { "type":"range","id":"tabs_content_spacing","label":"Espaçamento entre abas e conteúdo","min":0,"max":100,"step":5,"unit":"px","default":20},
+
+    { "type":"range","id":"tab_text_size_mobile","label":"Tamanho texto da aba (mobile)","min":10,"max":40,"step":1,"unit":"px","default":14},
+    { "type":"range","id":"tab_text_size_desktop","label":"Tamanho texto da aba (desktop)","min":10,"max":40,"step":1,"unit":"px","default":16},
+    { "type":"range","id":"content_text_size_mobile","label":"Tamanho texto do conteúdo (mobile)","min":10,"max":40,"step":1,"unit":"px","default":14},
+    { "type":"range","id":"content_text_size_desktop","label":"Tamanho texto do conteúdo (desktop)","min":10,"max":40,"step":1,"unit":"px","default":16},
+
+    { "type":"select","id":"content_vertical_alignment","label":"Alinhamento vertical do texto","options":[{"value":"flex-start","label":"Topo"},{"value":"center","label":"Meio"}],"default":"flex-start"},
+    { "type":"range","id":"image_width_pct","label":"Tamanho da imagem (%)","min":10,"max":90,"step":5,"unit":"%","default":40},
+    { "type":"range","id":"content_gap","label":"Espaçamento entre imagem e texto","min":0,"max":100,"step":5,"unit":"px","default":20},
+
+    { "type":"range","id":"tab_border_radius","label":"Arredondamento das abas","min":0,"max":50,"step":1,"unit":"px","default":4},
+
+    { "type":"color","id":"background_color","label":"Cor de fundo da seção"},
+    { "type":"color","id":"text_color","label":"Cor do texto (título e parágrafos)"},
+    { "type":"color","id":"tab_active_bg_color","label":"Cor da borda ativa"},
+    { "type":"color","id":"tab_active_text_color","label":"Texto da aba ativa"},
+    { "type":"color","id":"tab_inactive_bg_color","label":"Fundo das abas inativas"},
+    { "type":"color","id":"tab_inactive_text_color","label":"Texto das abas inativas"},
+    { "type":"color","id":"tab_border_color","label":"Cor da borda das abas"}
+  ],
+  "blocks": [
+    {
+      "type": "tab",
+      "name": "Aba",
+      "settings": [
+        { "type":"text","id":"tab_label","label":"Rótulo da aba","default":"Materials" },
+        { "type":"image_picker","id":"image","label":"Imagem" },
+        { "type":"richtext","id":"title","label":"Título","default":"<p>Materials</p>" },
+        { "type":"richtext","id":"body","label":"Descrição","default":"<p>Insira aqui o texto de descrição da aba.</p>" },
+        { "type":"richtext","id":"link_text","label":"Texto do link","default":"<p>REPORT ↗</p>" },
+        { "type":"url","id":"link_url","label":"URL do link" },
+        { "type":"select","id":"link_target","label":"Abrir link em","options":[{"value":"_self","label":"Mesma janela"},{"value":"_blank","label":"Nova aba"}],"default":"_blank" }
+      ]
+    }
+  ]
+}
+{% endschema %}

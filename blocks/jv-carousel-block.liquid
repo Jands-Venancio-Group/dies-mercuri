@@ -1,0 +1,215 @@
+<!-- /blocks/jv-carousel-block.liquid -->
+
+{% comment %}
+  Wrapper para variáveis de tamanho e cores
+{% endcomment %}
+<div class="jv-carousel"
+     data-interval="{{ block.settings.slide_interval }}"
+     style="
+       --desktop-width: {{ block.settings.desktop_width }}px;
+       --mobile-width: {{ block.settings.mobile_width_pct }}%;
+       --color-ind-active: {{ block.settings.indicator_active_color }};
+       --color-ind-inactive: {{ block.settings.indicator_inactive_color }};
+     ">
+  
+  <!-- Slides -->
+  <div class="jv-carousel__slides-wrapper">
+    {% for i in (1..5) %}
+      {% capture image_id %}image_{{ i }}{% endcapture %}
+      {% capture link_id  %}link_{{ i }}{% endcapture %}
+      {% assign img_url  = block.settings[image_id] %}
+      {% assign link_url = block.settings[link_id] %}
+      {% if img_url %}
+        <div class="jv-carousel__slide{% if forloop.first %} active{% endif %}">
+          {% if link_url %}
+            <a href="{{ link_url }}">
+              <img src="{{ img_url | img_url: 'master' }}" alt="">
+            </a>
+          {% else %}
+            <img src="{{ img_url | img_url: 'master' }}" alt="">
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Indicadores abaixo da imagem -->
+  <div class="jv-carousel__indicators"
+       style="margin-top: {{ block.settings.indicator_spacing }}px;">
+    {% for i in (1..5) %}
+      {% capture image_id %}image_{{ i }}{% endcapture %}
+      {% if block.settings[image_id] %}
+        <span class="jv-carousel__indicator{% if forloop.first %} active{% endif %}">
+          <span class="jv-carousel__indicator-progress"></span>
+        </span>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+.jv-carousel {
+  width: var(--desktop-width);
+  max-width: 100%;
+}
+@media (max-width: 749px) {
+    .jv-carousel {
+        max-width: var(--mobile-width);
+        width: 340px;
+    }
+}
+
+.jv-carousel__slides-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: {{ block.settings.aspect_ratio | replace: ":", "/" }};
+  overflow: hidden;
+}
+
+.jv-carousel__slide {
+  position: absolute; top:0; left:0;
+  width:100%; height:100%;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+.jv-carousel__slide.active {
+  opacity: 1;
+}
+.jv-carousel__slide img {
+  width:100%; height:100%; object-fit:cover;
+}
+
+.jv-carousel__indicators {
+  display: flex;
+  justify-content: center;
+}
+.jv-carousel__indicator {
+  position: relative;
+  width: {{ block.settings.indicator_width }}px;
+  height: 2px;
+  background: var(--color-ind-inactive);
+  opacity: 1;
+  margin: 0 4px;
+  cursor: pointer;
+  overflow: hidden;
+}
+.jv-carousel__indicator.active {
+  background:var(--color-ind-inactive);
+  opacity: 1;
+}
+.jv-carousel__indicator-progress {
+  position: absolute; bottom:0; left:0;
+  width: 0; height:100%;
+  background: var(--color-ind-active);
+}
+    .jv-carousel__indicator-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background-color: var(--color-ind-active);  /* ficou vermelho */
+    /* sem transition aqui */
+  }
+</style>
+
+<script>
+document.querySelectorAll('.jv-carousel').forEach(function(carousel) {
+  var slides     = carousel.querySelectorAll('.jv-carousel__slide');
+  var indicators = carousel.querySelectorAll('.jv-carousel__indicator');
+  var progresses = carousel.querySelectorAll('.jv-carousel__indicator-progress');
+  var wrapper    = carousel.querySelector('.jv-carousel__slides-wrapper');
+  var interval   = (parseInt(carousel.dataset.interval, 10) || 5) * 1000;
+  var current    = 0;
+  var startX     = null;
+  var timer;
+
+  function startProgress() {
+    // reset todas as barras
+    progresses.forEach(function(p) {
+      p.style.transition = 'none';
+      p.style.width = '0%';
+    });
+    // na próxima frame dupla, disparamos a animação
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        var p = progresses[current];
+        p.style.transition = 'width ' + (interval/1000) + 's linear';
+        p.style.width = '100%';
+      });
+    });
+  }
+
+  function showSlide(idx) {
+    clearTimeout(timer);
+    slides[current].classList.remove('active');
+    indicators[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    indicators[current].classList.add('active');
+    startProgress();
+    timer = setTimeout(function() {
+      showSlide((current + 1) % slides.length);
+    }, interval);
+  }
+
+  // indicadores clicáveis
+  indicators.forEach(function(ind, idx) {
+    ind.addEventListener('click', function() {
+      showSlide(idx);
+    });
+  });
+
+  // swipe mobile
+  wrapper.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+  }, {passive:true});
+  wrapper.addEventListener('touchmove', function(e) {
+    if (startX === null) return;
+    var dx = startX - e.touches[0].clientX;
+    if (Math.abs(dx) > 50) {
+      if (dx > 0) showSlide((current + 1) % slides.length);
+      else        showSlide((current - 1 + slides.length) % slides.length);
+      startX = null;
+    }
+  }, {passive:true});
+
+  // inicializa autoplay e a barra de progresso
+  startProgress();
+  timer = setTimeout(function() {
+    showSlide((current + 1) % slides.length);
+  }, interval);
+});
+</script>
+
+{% schema %}
+{
+  "name": "JV.CarrosselBloco",
+  "settings": [
+    { "type":"range","id":"desktop_width","label":"Largura desktop (px)","min":300,"max":1920,"step":20,"default":1200 },
+    { "type":"range","id":"mobile_width_pct","label":"Largura mobile (%)","min":90,"max":100,"step":1,"default":100 },
+    { "type":"range","id":"slide_interval","label":"Intervalo troca (seg)","min":1,"max":30,"step":1,"default":5 },
+    { "type":"select","id":"aspect_ratio","label":"Proporção da imagem","options":[
+        {"value":"1:1","label":"1:1"},{"value":"2:3","label":"2:3"},
+        {"value":"4:3","label":"4:3"},{"value":"3:4","label":"3:4"},
+        {"value":"16:9","label":"16:9"}
+      ],"default":"16:9"
+    },
+    { "type":"range","id":"indicator_width","label":"Largura indicador (px)","min":10,"max":100,"step":1,"default":20 },
+    { "type":"range","id":"indicator_spacing","label":"Espaçamento banner-ind. (px)","min":0,"max":100,"step":1,"default":10 },
+    { "type":"color","id":"indicator_active_color","label":"Cor indicador ativo","default":"#000000" },
+    { "type":"color","id":"indicator_inactive_color","label":"Cor indicador inativo","default":"#cccccc" },
+    { "type":"image_picker","id":"image_1","label":"Imagem 1" },
+    { "type":"url","id":"link_1","label":"Link Imagem 1" },
+    { "type":"image_picker","id":"image_2","label":"Imagem 2" },
+    { "type":"url","id":"link_2","label":"Link Imagem 2" },
+    { "type":"image_picker","id":"image_3","label":"Imagem 3" },
+    { "type":"url","id":"link_3","label":"Link Imagem 3" },
+    { "type":"image_picker","id":"image_4","label":"Imagem 4" },
+    { "type":"url","id":"link_4","label":"Link Imagem 4" },
+    { "type":"image_picker","id":"image_5","label":"Imagem 5" },
+    { "type":"url","id":"link_5","label":"Link Imagem 5" }
+  ],
+  "presets":[ { "name":"JV Carrossel de Imagens" } ]
+}
+{% endschema %}
