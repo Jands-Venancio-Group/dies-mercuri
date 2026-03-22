@@ -11,12 +11,23 @@
 {%- enddoc -%}
 
 {% liquid
+  assign badge_sold_out = false
+  assign badge_sale = false
+
   if variant != blank
-    assign badge_sold_out = variant.available == false
-    assign badge_sale = variant.compare_at_price > variant.price and variant.available
+    unless variant.available
+      assign badge_sold_out = true
+    endunless
+    if variant.available and variant.compare_at_price > variant.price
+      assign badge_sale = true
+    endif
   else
-    assign badge_sold_out = product.available == false
-    assign badge_sale = product.compare_at_price > product.price and product.available
+    unless product.available
+      assign badge_sold_out = true
+    endunless
+    if product.available and product.compare_at_price > product.price
+      assign badge_sale = true
+    endif
   endif
 %}
 
